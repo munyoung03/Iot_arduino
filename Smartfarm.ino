@@ -11,7 +11,11 @@
 
 SoftwareSerial Serial1(3,2); // RX, TX 
 
-int pin = 5;
+int pin = 4;
+int soil_humi = A0;
+  
+int soil_humi_value;  
+
 DHT11 dht11(pin);
 
 float temp, humi;
@@ -54,8 +58,11 @@ void setup()
   // check for the presence of the shield
 
   if(i = dht11.read(humi, temp) ==0){
+    soil_humi_value = analogRead(soil_humi);
+    soil_humi_value = map(soil_humi_value,550,0,0,100); 
     Serial.println(temp);
-    connectWifi(humi, temp);
+    Serial.println(soil_humi_value);
+    connectWifi(humi, temp, soil_humi_value);
   }
   else{
     Serial.println("실패");
@@ -63,7 +70,7 @@ void setup()
 }
 
 
-void connectWifi(int humi, int temp){
+void connectWifi(float humi, float temp, int soil_humi_value){
    if (WiFi.status() == WL_NO_SHIELD) {
 
     Serial.println("WiFi shield not present");
@@ -110,6 +117,8 @@ void connectWifi(int humi, int temp){
     client.print(temp);
     client.print("&humi=");
     client.print(humi);
+    client.print("&soilhumi=");
+    client.print(soil_humi_value);  
     client.print("&id=1");
     client.println(" HTTP/1.1");
     client.println("Host: 54.236.26.160/");
