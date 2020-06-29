@@ -34,24 +34,44 @@ WiFiEspClient client;
 void setup()
 
 {
+
   Serial.begin(9600);
 
   dht.begin();
 
-  WiFi.init(&Serial1);
+  ///WiFi.init(&Serial1);
 
-  soil_humi_value = analogRead(soil_humi);
-  soil_humi_value = map(soil_humi_value,550,0,0,100); 
-  temp = dht.readTemperature();
-  humi = dht.readHumidity();
-  Serial.println(temp);
-  Serial.println(soil_humi_value);
-  connectWifi(humi, temp, soil_humi_value);
-  
+  //connectWifi();
+
+  pinMode(5, OUTPUT);
+
 }
 
 
-void connectWifi(float humi, float temp, int soil_humi_value){
+void sendData(float humi, float temp, int soil_humi_value){
+  
+  if (client.connect(server, 3000)) {
+
+    Serial.println("Connected to server");
+    
+    client.print("GET /update?temp=");
+    client.print(temp);
+    client.print("&humi=");
+    client.print(humi);
+    client.print("&soilhumi=");
+    client.print(soil_humi_value);  
+    client.print("&id=1");
+    client.println(" HTTP/1.1");
+    client.println("Host: 54.236.26.160/");
+
+    client.println("Connection: close");
+
+    client.println();
+  }
+
+}
+
+void connectWifi(){
    if (WiFi.status() == WL_NO_SHIELD) {
 
     Serial.println("WiFi shield not present");
@@ -78,51 +98,32 @@ void connectWifi(float humi, float temp, int soil_humi_value){
 
   Serial.println("Starting connection to server...");
 
-  if (client.connect(server, 3000)) {
-
-    Serial.println("Connected to server");
-    
-    client.print("GET /update?temp=");
-    client.print(temp);
-    client.print("&humi=");
-    client.print(humi);
-    client.print("&soilhumi=");
-    client.print(soil_humi_value);  
-    client.print("&id=1");
-    client.println(" HTTP/1.1");
-    client.println("Host: 54.236.26.160/");
-
-    client.println("Connection: close");
-
-    client.println();
-
-  }
+  
 }
 void loop()
 
 {
   
-  while (client.available()) {
+  soil_humi_value = analogRead(soil_humi);
+  soil_humi_value = map(soil_humi_value,550,0,0,100); 
+  temp = dht.readTemperature();
+  humi = dht.readHumidity();
+  Serial.println(temp);
 
-    char c = client.read();
-
-    Serial.write(c);
-
+  if(temp >= 30)
+  {
+    analogWrite(5, 255);
   }
+  else
+    analogWrite(5, 0);
+    
+  //if (!client.connected()) {
+    //connectWifi();
+    //}
 
+  //sendData(humi, temp, soil_humi_value); 
 
-  if (!client.connected()) {
-
-    Serial.println();
-
-    Serial.println("Disconnecting from server...");
-
-    client.stop();
-
-
-    while (true);
-
-  }
+  //delay(1000);
 
 }
 
