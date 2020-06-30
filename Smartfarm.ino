@@ -8,7 +8,7 @@
 
 #include "SoftwareSerial.h"
 
-SoftwareSerial Serial1(3,2); // RX, TX 
+//SoftwareSerial Serial1(3,2); // RX, TX 
 
 int pin = 4;
 int soil_humi = A0;
@@ -42,6 +42,8 @@ void setup()
   ///WiFi.init(&Serial1);
 
   //connectWifi();
+   pinMode(8, OUTPUT);
+
 
   pinMode(5, OUTPUT);
 
@@ -112,11 +114,15 @@ void loop()
 
   if(temp >= 30)
   {
-    analogWrite(5, 255);
+   
+    digitalWrite(8,LOW);
   }
   else
-    analogWrite(5, 0);
-    
+    digitalWrite(8,HIGH);
+    delay(30);
+    digitalWrite(8,LOW);
+    delay(55);
+        
   //if (!client.connected()) {
     //connectWifi();
     //}
