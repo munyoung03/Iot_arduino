@@ -11,8 +11,9 @@
 //SoftwareSerial Serial1(3,2); // RX, TX 
 
 int pin = 4;
+
+int light;
 int soil_humi = A0;
-  
 int soil_humi_value;  
 
 DHT dht(4, DHT22);  
@@ -42,9 +43,8 @@ void setup()
   ///WiFi.init(&Serial1);
 
   //connectWifi();
-   pinMode(8, OUTPUT);
-
-
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
   pinMode(5, OUTPUT);
 
 }
@@ -110,18 +110,26 @@ void loop()
   soil_humi_value = map(soil_humi_value,550,0,0,100); 
   temp = dht.readTemperature();
   humi = dht.readHumidity();
+  light = analogRead(A1);
   Serial.println(temp);
-
-  if(temp >= 30)
+  Serial.print("jodo : ");
+  Serial.println(light);
+    
+  if(temp >= 23)
   {
    
     digitalWrite(8,LOW);
+    digitalWrite(7,LOW);
   }
   else
+  {
     digitalWrite(8,HIGH);
-    delay(30);
+    digitalWrite(7,HIGH);
+    delay(1000);
     digitalWrite(8,LOW);
-    delay(55);
+    digitalWrite(7,LOW);
+    delay(300);
+  }
         
   //if (!client.connected()) {
     //connectWifi();
