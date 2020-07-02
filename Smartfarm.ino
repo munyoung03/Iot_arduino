@@ -1,25 +1,19 @@
 #include "WiFiEsp.h"
 #include "DHT.h" 
-
-
 #ifndef HAVE_HWSERIAL1
-
 #endif
-
 #include "SoftwareSerial.h"
-
 //SoftwareSerial Serial1(3,2); // RX, TX 
 
 int pin = 4;
-
-int light;
 int soil_humi = A0;
 int soil_humi_value;  
+DHT dht(4, DHT22);
 
-DHT dht(4, DHT22);  
-
+unsigned long count = 0;
 float temp, humi;
 int i;
+int light;
 
 char ssid[] = "dgsw_embd_1";            // your network SSID (name)
 
@@ -31,22 +25,32 @@ char server[] = "munyoung.kro.kr";
 
 WiFiEspClient client;
 
-
 void setup()
 
-{
-
+{ 
   Serial.begin(9600);
-
   dht.begin();
-
-  ///WiFi.init(&Serial1);
-
+  
+  //WiFi.init(&Serial1);
+  
   //connectWifi();
+  
+  TCCR1A = 0x00;
+  TCCR1B = 0x0D;
+  TCCR1C = 0x00;
+
+  TCCR3A = 0x00;
+  TCCR3B = 0x0C;
+  TCCR3C = 0x00;
+
+  OCR1A = 1500;
+  OCR3A = 6250;
+  
+  TIMSK1 = 0x02;
+  
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(5, OUTPUT);
-
 }
 
 
@@ -70,7 +74,6 @@ void sendData(float humi, float temp, int soil_humi_value){
 
     client.println();
   }
-
 }
 
 void connectWifi(){
@@ -98,14 +101,10 @@ void connectWifi(){
 
   Serial.println();
 
-  Serial.println("Starting connection to server...");
-
-  
+  Serial.println("Starting connection to server..."); 
 }
 void loop()
-
 {
-  
   soil_humi_value = analogRead(soil_humi);
   soil_humi_value = map(soil_humi_value,550,0,0,100); 
   temp = dht.readTemperature();
@@ -114,10 +113,9 @@ void loop()
   Serial.println(temp);
   Serial.print("jodo : ");
   Serial.println(light);
-    
+        
   if(temp >= 23)
   {
-   
     digitalWrite(8,LOW);
     digitalWrite(7,LOW);
   }
@@ -125,30 +123,22 @@ void loop()
   {
     digitalWrite(8,HIGH);
     digitalWrite(7,HIGH);
-    delay(1000);
+    delay(1000); 
     digitalWrite(8,LOW);
     digitalWrite(7,LOW);
     delay(300);
   }
-        
-  //if (!client.connected()) {
-    //connectWifi();
-    //}
 
-  //sendData(humi, temp, soil_humi_value); 
+  
+        
 
   //delay(1000);
 
 }
 
-
-
-
-void printWifiStatus()
+void printWifiStatus()  
 
 {
-
-
   Serial.print("SSID: ");
 
   Serial.println(WiFi.SSID());
@@ -166,5 +156,19 @@ void printWifiStatus()
   Serial.print(rssi);
 
   Serial.println(" dBm");
+}
 
+ISR(TIMER1_COMPA_vect)
+{
+  count++;
+  Serial.println(count);
+  if(count == 3125){
+    count = 0;
+    if (!client.connected()) 
+    {
+      connectWifi();
+    }
+
+    sendData(humi, temp, soil_humi_value); 
+  }
 }
