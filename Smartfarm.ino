@@ -12,6 +12,8 @@ DHT dht(4, DHT22);
 
 unsigned long count = 0;
 float temp, humi;
+int timer1_count;
+int timer3_count;
 int i;
 int light;
 
@@ -113,25 +115,6 @@ void loop()
   Serial.println(temp);
   Serial.print("jodo : ");
   Serial.println(light);
-        
-  if(temp >= 23)
-  {
-    digitalWrite(8,LOW);
-    digitalWrite(7,LOW);
-  }
-  else
-  {
-    digitalWrite(8,HIGH);
-    digitalWrite(7,HIGH);
-    delay(1000); 
-    digitalWrite(8,LOW);
-    digitalWrite(7,LOW);
-    delay(300);
-  }
-
-  
-        
-
   //delay(1000);
 
 }
@@ -160,15 +143,40 @@ void printWifiStatus()
 
 ISR(TIMER1_COMPA_vect)
 {
-  count++;
+  timer1_count++;
   Serial.println(count);
-  if(count == 3125){
-    count = 0;
+  if(timer1_count == 3125){
+    timer1_count = 0;
     if (!client.connected()) 
     {
       connectWifi();
     }
 
     sendData(humi, temp, soil_humi_value); 
+  }
+}
+
+ISR(TIMER3_COMPA_vect)
+{
+  timer3_count++;
+  if(timer3_count > 13)
+    timer3_count = 0;
+  if(temp >= 23)
+  {
+    digitalWrite(8,LOW);
+    digitalWrite(7,LOW);
+  }
+  else
+  {
+    if(timer3_count <= 13)
+    { 
+      digitalWrite(8,HIGH);
+      digitalWrite(7,HIGH);
+    }
+    if(timer3_count <= 3)
+    { 
+      digitalWrite(8,LOW);
+      digitalWrite(7,LOW);
+    }
   }
 }
