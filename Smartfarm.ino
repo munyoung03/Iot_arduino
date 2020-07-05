@@ -3,7 +3,12 @@
 #ifndef HAVE_HWSERIAL1
 #endif
 #include "SoftwareSerial.h"
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 //SoftwareSerial Serial1(3,2); // RX, TX 
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); //lcd 주소값 설정
+#define DS3231_I2C_ADDRESS 104
 
 int pin = 4;
 int soil_humi = A0;
@@ -30,8 +35,11 @@ WiFiEspClient client;
 void setup()
 
 { 
+  Wire.begin();
   Serial.begin(9600);
   dht.begin();
+
+  startDisplay();
   
   //WiFi.init(&Serial1);
   
@@ -115,6 +123,7 @@ void loop()
   Serial.println(temp);
   Serial.print("jodo : ");
   Serial.println(light);
+  printHT();
   //delay(1000);
 
 }
@@ -179,4 +188,27 @@ ISR(TIMER3_COMPA_vect)
       digitalWrite(7,LOW);
     }
   }
+}
+
+//인트로 text 출력
+void startDisplay(){
+  lcd.init();
+  lcd.backlight();
+  
+  lcd.begin(16, 2);
+  lcd.setCursor(1,0);
+  lcd.print("SmartFarm");
+  lcd.setCursor(9, 1);
+  lcd.print("ver 1.0");
+  delay(1000);
+  lcd.clear();
+}
+
+//현재 온도 현재 습도 출력
+void printHT(){
+  lcd.setCursor(1,0);
+  lcd.print("Tem: ");
+  lcd.print(temp);
+  delay(1000);
+  lcd.clear();
 }
