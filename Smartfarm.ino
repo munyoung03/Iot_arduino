@@ -57,12 +57,29 @@ void setup()
   OCR3A = 6250;
   
   TIMSK1 = 0x02;
+  TIMSK3 = 0x02;
   
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(5, OUTPUT);
+  pinMode(12, OUTPUT);
 }
 
+void loop()
+{
+  soil_humi_value = analogRead(soil_humi);
+  soil_humi_value = map(soil_humi_value,550,0,0,100); 
+  temp = dht.readTemperature();
+  humi = dht.readHumidity();
+  light = analogRead(A1);
+  Serial.println(temp);
+  Serial.print("jodo : ");
+  Serial.println(light);
+  printHT();
+  digitalWrite(12, HIGH);
+  //delay(1000);
+
+}
 
 void sendData(float humi, float temp, int soil_humi_value){
   
@@ -113,19 +130,11 @@ void connectWifi(){
 
   Serial.println("Starting connection to server..."); 
 }
-void loop()
-{
-  soil_humi_value = analogRead(soil_humi);
-  soil_humi_value = map(soil_humi_value,550,0,0,100); 
-  temp = dht.readTemperature();
-  humi = dht.readHumidity();
-  light = analogRead(A1);
-  Serial.println(temp);
-  Serial.print("jodo : ");
-  Serial.println(light);
-  printHT();
-  //delay(1000);
 
+//토양 습도에 따라 모터 펌프 작동시키는 함수
+void working_pump(){
+   delay(5000);
+   digitalWrite(12, LOW);
 }
 
 void printWifiStatus()  
@@ -170,22 +179,19 @@ ISR(TIMER3_COMPA_vect)
   timer3_count++;
   if(timer3_count > 13)
     timer3_count = 0;
-  if(temp >= 23)
+  if(temp >= 25)
   {
     digitalWrite(8,LOW);
-    digitalWrite(7,LOW);
   }
   else
   {
-    if(timer3_count <= 13)
+    if(timer3_count > 3)
     { 
       digitalWrite(8,HIGH);
-      digitalWrite(7,HIGH);
     }
     if(timer3_count <= 3)
     { 
       digitalWrite(8,LOW);
-      digitalWrite(7,LOW);
     }
   }
 }
@@ -206,9 +212,12 @@ void startDisplay(){
 
 //현재 온도 현재 습도 출력
 void printHT(){
-  lcd.setCursor(1,0);
+  lcd.setCursor(0,0);
   lcd.print("Tem: ");
   lcd.print(temp);
+  lcd.setCursor(0,1);
+  lcd.print("Humi: ");
+  lcd.print(humi);
   delay(1000);
   lcd.clear();
 }
